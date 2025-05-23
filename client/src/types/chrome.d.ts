@@ -13,6 +13,10 @@ interface Chrome {
       queryInfo: { active: boolean; currentWindow: boolean },
       callback: (tabs: { id?: number }[]) => void
     ) => void;
+    create?: (
+      createProperties: { url: string },
+      callback?: (tab: { id?: number }) => void
+    ) => void;
     sendMessage?: (tabId: number, message: any, callback?: (response: any) => void) => void;
   };
 }
