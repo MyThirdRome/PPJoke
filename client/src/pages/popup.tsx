@@ -123,7 +123,7 @@ export default function Popup() {
             if (tab && tab.id) {
               // Wait a moment for the page to load
               setTimeout(() => {
-                if (window.chrome && window.chrome.tabs && window.chrome.tabs.sendMessage) {
+                if (window.chrome && window.chrome.tabs && window.chrome.tabs.sendMessage && typeof tab.id === 'number') {
                   window.chrome.tabs.sendMessage(tab.id, {
                     action: "execute",
                     settings,
