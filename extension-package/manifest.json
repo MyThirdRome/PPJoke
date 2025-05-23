@@ -1,0 +1,22 @@
+{
+  "manifest_version": 3,
+  "name": "PayPal Scanner",
+  "version": "1.0.0",
+  "description": "Security scanner for PayPal accounts",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab",
+    "tabs"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://www.paypal.com/signin*", "https://paypal.com/signin*"],
+      "js": ["content.js"]
+    }
+  ]
+}

@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>PayPal Scanner</title>
+  <style>
+    body {
+      width: 400px;
+      height: 500px;
+      margin: 0;
+      padding: 0;
+      font-family: 'Courier New', monospace;
+      background-color: #121212;
+      color: #e0e0e0;
+      overflow: hidden;
+    }
+    
+    .matrix-bg {
+      background-color: rgba(0, 0, 0, 0.9);
+      background-image: radial-gradient(rgba(0, 255, 0, 0.1) 1px, transparent 0);
+      background-size: 20px 20px;
+    }
+    
+    .terminal-scanline {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      background: linear-gradient(to bottom, rgba(0,255,0,0) 0%, rgba(0,255,0,0.1) 50%, rgba(0,255,0,0) 100%);
+      animation: scanline 3s linear infinite;
+    }
+    
+    @keyframes scanline {
+      0% { transform: translateY(0); }
+      100% { transform: translateY(100%); }
+    }
+    
+    @keyframes blink {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0; }
+    }
+    
+    .typing-cursor::after {
+      content: '|';
+      animation: blink 1s step-end infinite;
+    }
+    
+    .glitch-text {
+      position: relative;
+      text-shadow: 0.05em 0 0 rgba(255,0,0,0.5), -0.05em 0 0 rgba(0,255,255,0.5);
+    }
+    
+    header {
+      background-color: #1e1e1e;
+      padding: 12px;
+      border-bottom: 1px solid #00ff00;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .header-title {
+      display: flex;
+      align-items: center;
+    }
+    
+    .header-title h1 {
+      color: #00ff00;
+      font-size: 16px;
+      margin: 0;
+      margin-left: 8px;
+    }
+    
+    .window-controls {
+      display: flex;
+      gap: 8px;
+    }
+    
+    .window-button {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+    }
+    
+    main {
+      padding: 16px;
+      height: calc(100% - 44px - 48px);
+      overflow-y: auto;
+    }
+    
+    .section {
+      margin-bottom: 16px;
+    }
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 8px;
+      animation: blink 1s infinite;
+    }
+    
+    .section-title {
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .status-panel {
+      background-color: #1e1e1e;
+      border: 1px solid #00ff00;
+      border-radius: 4px;
+      padding: 12px;
+      box-shadow: 0 0 10px rgba(0, 255, 0, 0.3);
+    }
+    
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+    
+    .status-value {
+      color: #00ff00;
+    }
+    
+    .cyan {
+      color: #00ffff;
+    }
+    
+    .progress-container {
+      background-color: #1e1e1e;
+      border: 1px solid #ff00ff;
+      border-radius: 4px;
+      padding: 12px;
+      margin-bottom: 16px;
+      display: none;
+    }
+    
+    .progress-info {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 12px;
+    }
+    
+    .progress-bar-container {
+      width: 100%;
+      height: 8px;
+      background-color: #333;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .progress-bar {
+      height: 100%;
+      width: 0%;
+      background-color: #ff00ff;
+      transition: width 0.5s ease;
+    }
+    
+    .terminal {
+      background-color: black;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 12px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      height: 300px;
+      overflow-y: auto;
+    }
+    
+    .log-line {
+      margin-bottom: 4px;
+      white-space: nowrap;
+    }
+    
+    .green {
+      color: #00ff00;
+    }
+    
+    .yellow {
+      color: #ffff00;
+    }
+    
+    .pink {
+      color: #ff00ff;
+    }
+    
+    footer {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background-color: #1e1e1e;
+      border-top: 1px solid #00ff00;
+      padding: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .access-level {
+      font-size: 12px;
+      color: #888;
+    }
+    
+    .scan-button {
+      background-color: #00ff00;
+      color: black;
+      border: none;
+      border-radius: 4px;
+      padding: 8px 24px;
+      font-weight: bold;
+      font-family: 'Courier New', monospace;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .scan-button:hover {
+      background-color: rgba(0, 255, 0, 0.8);
+    }
+    
+    .scan-button:disabled {
+      background-color: #444;
+      color: #888;
+      cursor: not-allowed;
+    }
+  </style>
+</head>
+<body class="matrix-bg">
+  <div class="terminal-scanline"></div>
+  
+  <!-- Header -->
+  <header>
+    <div class="header-title">
+      <i class="fas fa-user-secret" style="color: #00ff00;"></i>
+      <h1 class="glitch-text">PayPal Scanner v3.5</h1>
+    </div>
+    <div class="window-controls">
+      <button class="window-button" style="background-color: #ff3d00;"></button>
+      <button class="window-button" style="background-color: #ffff00;"></button>
+      <button class="window-button" style="background-color: #00ff00;"></button>
+    </div>
+  </header>
+  
+  <!-- Main Content -->
+  <main>
+    <!-- Status Section -->
+    <div class="section">
+      <div class="section-header">
+        <div class="status-dot" style="background-color: #00ff00;"></div>
+        <span class="section-title">System Status</span>
+        <span class="status-value" style="margin-left: auto;">CONNECTED</span>
+      </div>
+      
+      <!-- Progress Bar (shown during scanning) -->
+      <div class="progress-container" id="progress-section">
+        <div class="progress-info">
+          <span>Scanning Progress</span>
+          <span id="progress-percentage">0%</span>
+        </div>
+        <div class="progress-bar-container">
+          <div class="progress-bar" id="progress-bar"></div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Console Output -->
+    <div class="section">
+      <div class="section-header">
+        <div class="status-dot" style="background-color: #888;"></div>
+        <span class="section-title">Terminal Output</span>
+      </div>
+      
+      <div class="terminal" id="terminal">
+        <div class="log-line green">> Initializing PayPal Scanner...</div>
+        <div class="log-line cyan">> Establishing secure connection to PayPal servers...</div>
+        <div class="log-line yellow">> Attempting connection to api.paypal.com...</div>
+        <div class="log-line" style="color: #ff3d00;">> Connection failed. Retrying with alternative endpoint...</div>
+        <div class="log-line yellow">> Connecting to secure.paypal.com...</div>
+        <div class="log-line green">> Connection established successfully</div>
+        <div class="log-line pink">> Bypassing security protocols...</div>
+        <div class="log-line green typing-cursor">> Security bypassed. Scanner ready.</div>
+      </div>
+    </div>
+  </main>
+  
+  <!-- Footer -->
+  <footer>
+    <span class="access-level">ACCESS LEVEL: ROOT</span>
+    <button id="scan-button" class="scan-button">SCAN</button>
+  </footer>
+
+  <script src="popup.js"></script>
+</body>
+</html>
