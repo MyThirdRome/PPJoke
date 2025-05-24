@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "PayPal Autofill",
+  "version": "1.0.0",
+  "description": "Simple PayPal Autofill Tool",
+  "action": {
+    "default_popup": "popup.html"
+  },
+  "permissions": [
+    "activeTab"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.paypal.com/signin*", "https://paypal.com/signin*"],
+      "js": ["content.js"]
+    }
+  ]
+}
