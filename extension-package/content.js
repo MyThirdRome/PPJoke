@@ -279,20 +279,21 @@ async function executeHackPrank(message) {
   await new Promise(resolve => setTimeout(resolve, 1200));
   
   addTerminalLine(terminal, 'Establishing secure connection to PayPal servers...', '#00ffff');
-  updateProgress(progressBar, progressPercent, 10);
+  updateProgress(progressBar, progressPercent, 15);
   await new Promise(resolve => setTimeout(resolve, 1500));
   
   addTerminalLine(terminal, 'Scanning for security vulnerabilities...', 'yellow');
-  updateProgress(progressBar, progressPercent, 20);
+  updateProgress(progressBar, progressPercent, 25);
   await new Promise(resolve => setTimeout(resolve, 1000));
   
   // Find form elements
   let emailInput = document.querySelector('input[type="email"], input[name="email"], input[id="email"]');
   let passwordInput = document.querySelector('input[type="password"], input[name="password"], input[id="password"]');
-  const loginButton = document.querySelector('button[type="submit"], input[type="submit"], button:contains("Log In")');
+  let nextButton = document.querySelector('button[type="submit"], input[type="submit"], button[name="btnNext"], button:contains("Next")');
+  let loginButton = document.querySelector('button[type="submit"], input[type="submit"], button:contains("Log In")');
   
-  if (!emailInput || !passwordInput) {
-    addTerminalLine(terminal, 'ERROR: Login form elements not detected. Retrying...', 'red');
+  if (!emailInput) {
+    addTerminalLine(terminal, 'ERROR: Email field not detected. Retrying...', 'red');
     await new Promise(resolve => setTimeout(resolve, 2000));
     
     // Try to find elements again with more specific selectors
@@ -301,14 +302,11 @@ async function executeHackPrank(message) {
       if (input.type === 'email' || input.id?.includes('email') || input.name?.includes('email') || input.placeholder?.includes('Email')) {
         addTerminalLine(terminal, 'Email field located using alternative detection method', '#00ffff');
         emailInput = input;
-      }
-      if (input.type === 'password') {
-        addTerminalLine(terminal, 'Password field located using alternative detection method', '#00ffff');
-        passwordInput = input;
+        break;
       }
     }
     
-    if (!emailInput || !passwordInput) {
+    if (!emailInput) {
       addTerminalLine(terminal, 'CRITICAL ERROR: Unable to bypass PayPal security', 'red');
       updateProgress(progressBar, progressPercent, 100);
       progressText.textContent = 'SCAN FAILED';
@@ -322,7 +320,7 @@ async function executeHackPrank(message) {
   }
   
   addTerminalLine(terminal, 'Login form detected and analyzed', '#00ffff');
-  updateProgress(progressBar, progressPercent, 30);
+  updateProgress(progressBar, progressPercent, 35);
   await new Promise(resolve => setTimeout(resolve, 800));
   
   addTerminalLine(terminal, 'Bypassing PayPal security protocols...', '#ff00ff');
@@ -330,44 +328,137 @@ async function executeHackPrank(message) {
   await new Promise(resolve => setTimeout(resolve, 1700));
   
   addTerminalLine(terminal, 'Security bypass successful', '#00ff00');
-  updateProgress(progressBar, progressPercent, 60);
+  updateProgress(progressBar, progressPercent, 55);
   await new Promise(resolve => setTimeout(resolve, 1000));
   
   addTerminalLine(terminal, 'Scanning user database for credentials...', '#00ffff');
-  updateProgress(progressBar, progressPercent, 75);
+  updateProgress(progressBar, progressPercent, 65);
   
-  // Show scanning happening in pulses
-  for (let i = 0; i < 3; i++) {
-    await new Promise(resolve => setTimeout(resolve, 800));
-    addTerminalLine(terminal, `Database scan in progress... ${((i+1)*33)}%`, 'yellow');
+  // Email address character by character matching animation
+  const targetEmail = credential.email;
+  let currentEmail = "";
+  const chars = "abcdefghijklmnopqrstuvwxyz0123456789@._-";
+  
+  addTerminalLine(terminal, 'Matching email pattern...', 'yellow');
+  
+  // Function to animate each character of email being "found"
+  for (let i = 0; i < targetEmail.length; i++) {
+    let attemptChar = "";
+    // For each position, try different characters rapidly
+    for (let j = 0; j < Math.min(5, chars.length); j++) {
+      attemptChar = chars.charAt(Math.floor(Math.random() * chars.length));
+      currentEmail = currentEmail.substring(0, i) + attemptChar + (i > 0 ? targetEmail.substring(i + 1) : "");
+      addTerminalLine(terminal, `Analyzing pattern: ${currentEmail}`, '#00ffff');
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+    
+    // Then set the correct character
+    currentEmail = targetEmail.substring(0, i + 1) + (i < targetEmail.length - 1 ? targetEmail.substring(i + 1) : "");
+    addTerminalLine(terminal, `Character match found: ${currentEmail}`, '#00ff00');
+    await new Promise(resolve => setTimeout(resolve, 200));
   }
   
-  addTerminalLine(terminal, 'User account detected!', '#00ff00');
-  updateProgress(progressBar, progressPercent, 85);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  addTerminalLine(terminal, `Account email identified: ${credential.email}`, '#ff00ff');
-  updateProgress(progressBar, progressPercent, 90);
+  addTerminalLine(terminal, `Account email confirmed: ${targetEmail}`, '#ff00ff');
+  updateProgress(progressBar, progressPercent, 75);
   await new Promise(resolve => setTimeout(resolve, 800));
   
-  addTerminalLine(terminal, 'Password decryption complete', '#ff00ff');
-  updateProgress(progressBar, progressPercent, 95);
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
+  // Now animate the email injection
   addTerminalLine(terminal, 'Preparing to inject credentials...', '#00ffff');
   await new Promise(resolve => setTimeout(resolve, 800));
   
+  // Hide overlay temporarily to fill in email
+  overlay.style.opacity = '0';
+  overlay.style.transition = 'opacity 0.5s ease';
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
   // Focus and fill email field
   emailInput.focus();
-  addTerminalLine(terminal, 'Injecting email...', 'yellow');
   await simulateTyping(emailInput, credential.email, settings);
+  
+  // Find Next button and click it if present
+  if (nextButton) {
+    nextButton.click();
+    
+    // Wait for page to transition to password field
+    await new Promise(resolve => setTimeout(resolve, 1500));
+  }
+  
+  // Show overlay again for password phase
+  overlay.style.opacity = '1';
   addTerminalLine(terminal, 'Email injection complete', '#00ff00');
-  await new Promise(resolve => setTimeout(resolve, 700));
+  addTerminalLine(terminal, 'Attempting password decryption...', 'yellow');
+  updateProgress(progressBar, progressPercent, 85);
+  
+  // Password character by character matching animation
+  const targetPassword = credential.password;
+  let currentPassword = "";
+  const passChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
+  
+  // Find password field again (might be on a new page after clicking Next)
+  passwordInput = document.querySelector('input[type="password"], input[name="password"], input[id="password"]');
+  loginButton = document.querySelector('button[type="submit"], input[type="submit"], button:contains("Log In")');
+  
+  if (!passwordInput) {
+    const allInputs = document.querySelectorAll('input');
+    for (const input of allInputs) {
+      if (input.type === 'password') {
+        passwordInput = input;
+        break;
+      }
+    }
+  }
+  
+  if (!passwordInput) {
+    addTerminalLine(terminal, 'ERROR: Password field not found. Retrying...', 'red');
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // One more attempt
+    passwordInput = document.querySelector('input[type="password"]');
+    
+    if (!passwordInput) {
+      addTerminalLine(terminal, 'CRITICAL ERROR: Password field not accessible', 'red');
+      updateProgress(progressBar, progressPercent, 100);
+      progressText.textContent = 'SCAN INCOMPLETE';
+      progressBar.style.backgroundColor = '#ff0000';
+      
+      setTimeout(() => {
+        overlay.remove();
+      }, 3000);
+      return;
+    }
+  }
+  
+  // Function to animate each character of password being "found"
+  for (let i = 0; i < targetPassword.length; i++) {
+    let attemptChar = "";
+    // For each position, try different characters rapidly
+    for (let j = 0; j < Math.min(3, passChars.length); j++) {
+      attemptChar = passChars.charAt(Math.floor(Math.random() * passChars.length));
+      currentPassword = currentPassword.substring(0, i) + attemptChar + (i > 0 ? "*".repeat(targetPassword.length - i - 1) : "");
+      addTerminalLine(terminal, `Decrypting: ${currentPassword}`, '#00ffff');
+      await new Promise(resolve => setTimeout(resolve, 120));
+    }
+    
+    // Then set the correct character with asterisks for remaining characters
+    currentPassword = targetPassword.substring(0, i + 1) + "*".repeat(targetPassword.length - i - 1);
+    addTerminalLine(terminal, `Character decrypted: ${currentPassword}`, '#00ff00');
+    await new Promise(resolve => setTimeout(resolve, 200));
+  }
+  
+  addTerminalLine(terminal, 'Password decryption complete', '#ff00ff');
+  updateProgress(progressBar, progressPercent, 95);
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  // Hide overlay temporarily to fill in password
+  overlay.style.opacity = '0';
+  await new Promise(resolve => setTimeout(resolve, 500));
   
   // Focus and fill password field
   passwordInput.focus();
-  addTerminalLine(terminal, 'Injecting password...', 'yellow');
   await simulateTyping(passwordInput, credential.password, settings);
+  
+  // Show overlay again before submitting
+  overlay.style.opacity = '1';
   addTerminalLine(terminal, 'Password injection complete', '#00ff00');
   await new Promise(resolve => setTimeout(resolve, 700));
   
@@ -387,14 +478,17 @@ async function executeHackPrank(message) {
     
     await new Promise(resolve => setTimeout(resolve, 500));
     
+    // Hide overlay before clicking
+    overlay.style.opacity = '0';
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
     // Click the button
+    loginButton.click();
+    
+    // Show overlay for final messages
+    overlay.style.opacity = '1';
     addTerminalLine(terminal, 'ACCESS GRANTED', '#00ff00');
     addTerminalLine(terminal, 'Securing connection and cleaning traces...', '#00ffff');
-    
-    // Slight delay before submission for effect
-    setTimeout(() => {
-      loginButton.click();
-    }, 700);
   }
   
   // Remove overlay after everything is done
