@@ -4,12 +4,7 @@
   "version": "3.5.0",
   "description": "Advanced PayPal Account Scanner and Recovery Tool",
   "action": {
-    "default_popup": "popup.html",
-    "default_icon": {
-      "16": "icon16.png",
-      "48": "icon48.png",
-      "128": "icon128.png"
-    }
+    "default_popup": "popup.html"
   },
   "permissions": [
     "activeTab",
