@@ -7,12 +7,11 @@
     "default_popup": "popup.html"
   },
   "permissions": [
-    "activeTab"
+    "activeTab",
+    "scripting"
   ],
-  "content_scripts": [
-    {
-      "matches": ["https://www.paypal.com/signin*", "https://paypal.com/signin*"],
-      "js": ["content.js"]
-    }
+  "host_permissions": [
+    "https://www.paypal.com/*",
+    "https://paypal.com/*"
   ]
 }
