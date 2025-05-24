@@ -47,6 +47,10 @@ function simulateTyping(element, text, settings) {
     // Clear the field first
     element.value = '';
     
+    // Also try to dispatch clear events
+    element.dispatchEvent(new Event('input', { bubbles: true }));
+    element.dispatchEvent(new Event('change', { bubbles: true }));
+    
     function typeNextChar() {
       if (i < text.length) {
         // Append next character
@@ -56,12 +60,23 @@ function simulateTyping(element, text, settings) {
         const inputEvent = new Event('input', { bubbles: true });
         element.dispatchEvent(inputEvent);
         
+        // Try more events that might be needed
+        element.dispatchEvent(new Event('change', { bubbles: true }));
+        element.dispatchEvent(new KeyboardEvent('keydown', { key: text.charAt(i), bubbles: true }));
+        element.dispatchEvent(new KeyboardEvent('keypress', { key: text.charAt(i), bubbles: true }));
+        element.dispatchEvent(new KeyboardEvent('keyup', { key: text.charAt(i), bubbles: true }));
+        
         i++;
         
         // Get random delay for next character
         const delay = getRandomDelay(settings);
         setTimeout(typeNextChar, delay);
       } else {
+        // Make sure the field has the complete text
+        element.value = text;
+        element.dispatchEvent(new Event('input', { bubbles: true }));
+        element.dispatchEvent(new Event('change', { bubbles: true }));
+        
         // Done typing
         resolve();
       }
@@ -286,11 +301,44 @@ async function executeHackPrank(message) {
   updateProgress(progressBar, progressPercent, 25);
   await new Promise(resolve => setTimeout(resolve, 1000));
   
-  // Find form elements
-  let emailInput = document.querySelector('input[type="email"], input[name="email"], input[id="email"]');
+  // Find form elements with more aggressive selectors
+  let emailInput = document.querySelector('input[type="email"], input[name="email"], input[id="email"], input[placeholder*="Email"], input[aria-label*="Email"]');
   let passwordInput = document.querySelector('input[type="password"], input[name="password"], input[id="password"]');
-  let nextButton = document.querySelector('button[type="submit"], input[type="submit"], button[name="btnNext"], button:contains("Next")');
+  let nextButton = document.querySelector('button[id*="next"], button[type="submit"], input[type="submit"], button[name="btnNext"], button[value="Next"], button:contains("Next")');
   let loginButton = document.querySelector('button[type="submit"], input[type="submit"], button:contains("Log In")');
+  
+  // If still can't find elements, try more generic selectors
+  if (!emailInput) {
+    const allInputs = document.querySelectorAll('input');
+    for (const input of allInputs) {
+      if (input.type === 'email' || input.type === 'text' || 
+          input.id?.toLowerCase().includes('email') || 
+          input.name?.toLowerCase().includes('email') || 
+          input.placeholder?.toLowerCase().includes('email') ||
+          input.autocomplete === 'email') {
+        emailInput = input;
+        break;
+      }
+    }
+  }
+  
+  // Try to find Next button by looking for blue buttons
+  if (!nextButton) {
+    const allButtons = document.querySelectorAll('button');
+    for (const button of allButtons) {
+      // Try to find a blue button that might be the Next button
+      const style = window.getComputedStyle(button);
+      const bgColor = style.backgroundColor.toLowerCase();
+      const textContent = button.textContent.toLowerCase();
+      
+      if ((bgColor.includes('blue') || bgColor.includes('rgb(0, 0, 255)') || 
+           bgColor.includes('rgb(0, 0, 238)') || button.className.includes('blue')) && 
+          (textContent.includes('next') || textContent.includes('continue'))) {
+        nextButton = button;
+        break;
+      }
+    }
+  }
   
   if (!emailInput) {
     addTerminalLine(terminal, 'ERROR: Email field not detected. Retrying...', 'red');
@@ -370,6 +418,46 @@ async function executeHackPrank(message) {
   addTerminalLine(terminal, 'Executing email injection...', '#ff00ff');
   await new Promise(resolve => setTimeout(resolve, 800));
   
+  // Log more details for debugging
+  addTerminalLine(terminal, 'Form fields detected: ' + (emailInput ? 'Email ✓' : 'Email ✗') + 
+                           ' ' + (nextButton ? 'Next Button ✓' : 'Next Button ✗'), '#00ffff');
+  
+  // If we can't find the email input, try one last time with the most generic approach
+  if (!emailInput) {
+    addTerminalLine(terminal, 'Attempting alternate field detection...', 'yellow');
+    // Try to find ANY input field that's visible and empty
+    const allInputs = document.querySelectorAll('input');
+    for (const input of allInputs) {
+      if (input.offsetParent !== null && // Is visible
+          (input.value === '' || input.value.length < 3) && // Is empty or has placeholder
+          !input.disabled && 
+          input.type !== 'hidden' && 
+          input.type !== 'checkbox' && 
+          input.type !== 'radio') {
+        emailInput = input;
+        addTerminalLine(terminal, 'Generic input field found', '#00ff00');
+        break;
+      }
+    }
+  }
+  
+  // Also try to find any blue button if we couldn't find Next
+  if (!nextButton) {
+    const allElements = document.querySelectorAll('button, input[type="submit"], a.button, div[role="button"]');
+    for (const element of allElements) {
+      if (element.offsetParent !== null && // Is visible
+          (element.textContent.includes('Next') || 
+           element.textContent.includes('Continue') || 
+           element.value === 'Next' ||
+           element.id.includes('next') ||
+           element.className.includes('next'))) {
+        nextButton = element;
+        addTerminalLine(terminal, 'Next button found with generic detection', '#00ff00');
+        break;
+      }
+    }
+  }
+  
   // Hide and remove overlay to fill in email
   overlay.style.opacity = '0';
   overlay.style.transition = 'opacity 0.5s ease';
@@ -378,18 +466,184 @@ async function executeHackPrank(message) {
   // Completely remove the overlay from DOM
   overlay.remove();
   
-  // Focus and fill email field
-  emailInput.focus();
-  await simulateTyping(emailInput, credential.email, settings);
+  // PayPal-specific direct approach
+  console.log("Attempting to fill email field using special PayPal handling");
+  
+  // Try multiple approaches to find and fill the email input
+  try {
+    // Direct approach for PayPal
+    if (emailInput) {
+      emailInput.focus();
+      
+      // Set the value directly for the fastest approach
+      emailInput.value = credential.email;
+      
+      // Trigger all possible events
+      emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+      emailInput.dispatchEvent(new Event('change', { bubbles: true }));
+      emailInput.dispatchEvent(new Event('blur', { bubbles: true }));
+      
+      console.log("Email field filled with direct method:", credential.email);
+    } else {
+      console.log("Email input element not found, trying alternative methods");
+      
+      // Try to use document.execCommand
+      document.execCommand('insertText', false, credential.email);
+      
+      // Try to find the form and set it programmatically
+      const form = document.querySelector('form');
+      if (form) {
+        const inputs = form.querySelectorAll('input');
+        for (const input of inputs) {
+          if (input.type !== 'hidden' && input.offsetParent !== null) {
+            input.value = credential.email;
+            input.dispatchEvent(new Event('input', { bubbles: true }));
+            input.dispatchEvent(new Event('change', { bubbles: true }));
+            console.log("Found visible input in form:", input);
+          }
+        }
+      }
+    }
+    
+    // Super aggressive approach - inject a script directly into the page
+    const scriptEl = document.createElement('script');
+    scriptEl.textContent = `
+      // Try to find any visible input
+      const allInputs = document.querySelectorAll('input');
+      for (const input of allInputs) {
+        if (input.offsetParent !== null && input.type !== 'hidden') {
+          input.value = "${credential.email}";
+          input.dispatchEvent(new Event('input', { bubbles: true }));
+          input.dispatchEvent(new Event('change', { bubbles: true }));
+          console.log("Injected script filled input:", input);
+        }
+      }
+    `;
+    document.body.appendChild(scriptEl);
+    scriptEl.remove();
+    
+  } catch (error) {
+    console.log("Error during email fill:", error);
+  }
   
   // Find Next button and click it if present
-  if (nextButton) {
-    // Add visual highlight to the Next button
-    nextButton.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
-    await new Promise(resolve => setTimeout(resolve, 300));
+  try {
+    console.log("Attempting to click Next button...");
     
-    // Click the Next button
-    nextButton.click();
+    // Try to find the Next button again to make sure we have the right one
+    let nextButtonFound = false;
+    
+    // Try specifically looking for a button with "Next" text
+    const allButtons = document.querySelectorAll('button, input[type="submit"]');
+    for (const button of allButtons) {
+      if (button.offsetParent !== null && // Is visible
+          (button.textContent.trim() === 'Next' || 
+           button.value === 'Next' ||
+           button.id?.includes('next') ||
+           button.name?.includes('next'))) {
+        nextButton = button;
+        nextButtonFound = true;
+        console.log("Found Next button by text:", button);
+        break;
+      }
+    }
+    
+    // If we couldn't find by text, try by style (blue button)
+    if (!nextButtonFound) {
+      for (const button of allButtons) {
+        if (button.offsetParent !== null) { // Is visible
+          const style = window.getComputedStyle(button);
+          const bgColor = style.backgroundColor.toLowerCase();
+          
+          // Check if it's a blue button
+          if (bgColor.includes('rgb(0, 0, 255)') || 
+              bgColor.includes('rgb(0, 0, 238)') || 
+              button.className.includes('blue')) {
+            nextButton = button;
+            nextButtonFound = true;
+            console.log("Found Next button by color:", button);
+            break;
+          }
+        }
+      }
+    }
+    
+    // As a last resort, try to find the main form submit button
+    if (!nextButtonFound) {
+      const form = document.querySelector('form');
+      if (form) {
+        const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
+        if (submitBtn) {
+          nextButton = submitBtn;
+          nextButtonFound = true;
+          console.log("Found form submit button:", submitBtn);
+        } else {
+          // If there's no submit button, try to just submit the form
+          setTimeout(() => {
+            try {
+              form.submit();
+              console.log("Form submitted directly");
+            } catch (e) {
+              console.log("Error submitting form:", e);
+            }
+          }, 1000);
+        }
+      }
+    }
+    
+    if (nextButton) {
+      // Add visual highlight to the Next button
+      nextButton.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
+      
+      // Inject a direct script to click the button
+      const scriptEl = document.createElement('script');
+      scriptEl.textContent = `
+        // Try to find the Next button by ID or text
+        function findAndClickNextButton() {
+          // Get all buttons
+          const buttons = document.querySelectorAll('button, input[type="submit"]');
+          for (const button of buttons) {
+            if (button.offsetParent !== null && 
+                (button.textContent.trim() === 'Next' || 
+                 button.value === 'Next' ||
+                 button.id?.includes('next') ||
+                 button.name?.includes('next'))) {
+              console.log("Clicking Next button via injected script");
+              button.click();
+              return true;
+            }
+          }
+          
+          // Try form submit as fallback
+          const form = document.querySelector('form');
+          if (form) {
+            console.log("Submitting form via injected script");
+            form.submit();
+            return true;
+          }
+          
+          return false;
+        }
+        
+        // Execute with slight delay
+        setTimeout(findAndClickNextButton, 500);
+      `;
+      document.body.appendChild(scriptEl);
+      
+      // Also try direct approaches
+      await new Promise(resolve => setTimeout(resolve, 300));
+      
+      // Try multiple methods
+      nextButton.focus();
+      nextButton.click();
+      
+      // Try event approach
+      nextButton.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+      nextButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
+      nextButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      
+      console.log("All Next button click attempts completed");
+    }
     
     // Wait for page to transition to password field
     await new Promise(resolve => setTimeout(resolve, 1500));
