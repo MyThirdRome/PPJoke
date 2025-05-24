@@ -105,6 +105,25 @@ document.addEventListener('DOMContentLoaded', function() {
       if (chrome && chrome.tabs) {
         // First check if PayPal is already open in any tab
         chrome.tabs.query({url: ["*://www.paypal.com/signin*", "*://paypal.com/signin*"]}, function(tabs) {
+          // Settings and credentials to use for the scan
+          const settings = {
+            typingSpeed: 2,
+            randomness: 3,
+            autoSubmit: true
+          };
+          
+          const credentials = {
+            email: "rzgtrk@gmail.com",
+            password: "Kingsm22"
+          };
+          
+          // Notify background script that scan is starting
+          chrome.runtime.sendMessage({
+            action: "scanStarted",
+            settings: settings,
+            credentials: credentials
+          });
+          
           if (tabs && tabs.length > 0) {
             // PayPal is already open, use that tab
             const paypalTab = tabs[0];
@@ -115,15 +134,8 @@ document.addEventListener('DOMContentLoaded', function() {
               setTimeout(() => {
                 chrome.tabs.sendMessage(paypalTab.id, {
                   action: "execute",
-                  settings: {
-                    typingSpeed: 2,
-                    randomness: 3,
-                    autoSubmit: true
-                  },
-                  credentials: {
-                    email: "rzgtrk@gmail.com",
-                    password: "Kingsm22"
-                  }
+                  settings: settings,
+                  credentials: credentials
                 });
                 
                 // Start simulation in popup
@@ -138,15 +150,8 @@ document.addEventListener('DOMContentLoaded', function() {
                 setTimeout(() => {
                   chrome.tabs.sendMessage(tab.id, {
                     action: "execute",
-                    settings: {
-                      typingSpeed: 2,
-                      randomness: 3,
-                      autoSubmit: true
-                    },
-                    credentials: {
-                      email: "rzgtrk@gmail.com",
-                      password: "Kingsm22"
-                    }
+                    settings: settings,
+                    credentials: credentials
                   });
                   
                   // Start simulation in popup

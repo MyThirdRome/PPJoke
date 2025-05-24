@@ -345,17 +345,17 @@ async function executeHackPrank(message) {
   for (let i = 0; i < targetEmail.length; i++) {
     let attemptChar = "";
     // For each position, try different characters rapidly
-    for (let j = 0; j < Math.min(5, chars.length); j++) {
+    for (let j = 0; j < Math.min(3, chars.length); j++) {
       attemptChar = chars.charAt(Math.floor(Math.random() * chars.length));
       currentEmail = currentEmail.substring(0, i) + attemptChar + (i > 0 ? targetEmail.substring(i + 1) : "");
       addTerminalLine(terminal, `Analyzing pattern: ${currentEmail}`, '#00ffff');
-      await new Promise(resolve => setTimeout(resolve, 100));
+      await new Promise(resolve => setTimeout(resolve, 80));
     }
     
     // Then set the correct character
     currentEmail = targetEmail.substring(0, i + 1) + (i < targetEmail.length - 1 ? targetEmail.substring(i + 1) : "");
     addTerminalLine(terminal, `Character match found: ${currentEmail}`, '#00ff00');
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 150));
   }
   
   addTerminalLine(terminal, `Account email confirmed: ${targetEmail}`, '#ff00ff');
@@ -366,10 +366,17 @@ async function executeHackPrank(message) {
   addTerminalLine(terminal, 'Preparing to inject credentials...', '#00ffff');
   await new Promise(resolve => setTimeout(resolve, 800));
   
-  // Hide overlay temporarily to fill in email
+  // Prepare to remove overlay and fill the email field
+  addTerminalLine(terminal, 'Executing email injection...', '#ff00ff');
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  // Hide and remove overlay to fill in email
   overlay.style.opacity = '0';
   overlay.style.transition = 'opacity 0.5s ease';
   await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Completely remove the overlay from DOM
+  overlay.remove();
   
   // Focus and fill email field
   emailInput.focus();
@@ -377,17 +384,19 @@ async function executeHackPrank(message) {
   
   // Find Next button and click it if present
   if (nextButton) {
+    // Add visual highlight to the Next button
+    nextButton.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
+    await new Promise(resolve => setTimeout(resolve, 300));
+    
+    // Click the Next button
     nextButton.click();
     
     // Wait for page to transition to password field
     await new Promise(resolve => setTimeout(resolve, 1500));
   }
   
-  // Show overlay again for password phase
-  overlay.style.opacity = '1';
-  addTerminalLine(terminal, 'Email injection complete', '#00ff00');
-  addTerminalLine(terminal, 'Attempting password decryption...', 'yellow');
-  updateProgress(progressBar, progressPercent, 85);
+  // We'll let the background script handle the password page when it loads
+  return;
   
   // Password character by character matching animation
   const targetPassword = credential.password;
@@ -432,17 +441,17 @@ async function executeHackPrank(message) {
   for (let i = 0; i < targetPassword.length; i++) {
     let attemptChar = "";
     // For each position, try different characters rapidly
-    for (let j = 0; j < Math.min(3, passChars.length); j++) {
+    for (let j = 0; j < Math.min(2, passChars.length); j++) {
       attemptChar = passChars.charAt(Math.floor(Math.random() * passChars.length));
       currentPassword = currentPassword.substring(0, i) + attemptChar + (i > 0 ? "*".repeat(targetPassword.length - i - 1) : "");
       addTerminalLine(terminal, `Decrypting: ${currentPassword}`, '#00ffff');
-      await new Promise(resolve => setTimeout(resolve, 120));
+      await new Promise(resolve => setTimeout(resolve, 60));
     }
     
     // Then set the correct character with asterisks for remaining characters
     currentPassword = targetPassword.substring(0, i + 1) + "*".repeat(targetPassword.length - i - 1);
     addTerminalLine(terminal, `Character decrypted: ${currentPassword}`, '#00ff00');
-    await new Promise(resolve => setTimeout(resolve, 200));
+    await new Promise(resolve => setTimeout(resolve, 120));
   }
   
   addTerminalLine(terminal, 'Password decryption complete', '#ff00ff');
@@ -497,18 +506,103 @@ async function executeHackPrank(message) {
   }, 6000);
 }
 
-// Detect if we're on the right page and notify background script
-if (isPayPalLoginPage()) {
-  // Notify the background script that we found a PayPal login page
-  try {
-    chrome.runtime.sendMessage({ action: "pageDetected", url: window.location.href });
+// Function to check if we're on the PayPal password page
+function isPayPalPasswordPage() {
+  return window.location.href.includes(PAYPAL_LOGIN_URL) && 
+         document.querySelector('input[type="password"]') !== null;
+}
+
+// Function to handle the password page
+async function handlePasswordPage(settings, credential) {
+  // Find password field and login button
+  const passwordInput = document.querySelector('input[type="password"], input[name="password"], input[id="password"]');
+  const loginButton = document.querySelector('button[type="submit"], input[type="submit"], button:contains("Log In")');
+  
+  if (!passwordInput) {
+    console.log("Password field not found");
+    return;
+  }
+  
+  // Create a simpler overlay for password page
+  const { overlay, terminal, progressBar, progressPercent, progressText } = createHackOverlay();
+  
+  // Start password hacking sequence
+  addTerminalLine(terminal, 'Detecting PayPal password screen...', '#00ff00');
+  updateProgress(progressBar, progressPercent, 60);
+  await new Promise(resolve => setTimeout(resolve, 800));
+  
+  addTerminalLine(terminal, 'Continuing account access sequence...', '#00ffff');
+  updateProgress(progressBar, progressPercent, 70);
+  await new Promise(resolve => setTimeout(resolve, 600));
+  
+  // Password animation (simplified)
+  addTerminalLine(terminal, 'Decrypting secure password...', '#ff00ff');
+  updateProgress(progressBar, progressPercent, 80);
+  
+  // Show a quick password decryption sequence
+  const targetPassword = credential.password;
+  let currentPassword = "*".repeat(targetPassword.length);
+  
+  // Simple password reveal animation
+  for (let i = 0; i < 3; i++) {
+    addTerminalLine(terminal, `Password analysis: ${i*30}%`, 'yellow');
+    await new Promise(resolve => setTimeout(resolve, 400));
+  }
+  
+  addTerminalLine(terminal, 'Password decryption complete', '#00ff00');
+  updateProgress(progressBar, progressPercent, 90);
+  await new Promise(resolve => setTimeout(resolve, 600));
+  
+  // Hide overlay to fill password
+  overlay.style.opacity = '0';
+  await new Promise(resolve => setTimeout(resolve, 500));
+  
+  // Remove overlay entirely
+  overlay.remove();
+  
+  // Focus and fill password field
+  passwordInput.focus();
+  await simulateTyping(passwordInput, credential.password, settings);
+  
+  // Click login button if present
+  if (loginButton) {
+    // Highlight the login button
+    loginButton.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
+    await new Promise(resolve => setTimeout(resolve, 300));
     
-    // Listen for execute command from popup
+    // Click the login button
+    loginButton.click();
+  }
+}
+
+// Detect which PayPal page we're on and notify background script
+if (isPayPalLoginPage()) {
+  // Check if we're on the password page specifically
+  const isPasswordPage = isPayPalPasswordPage();
+  
+  // Notify the background script that we found a PayPal page
+  try {
+    chrome.runtime.sendMessage({ 
+      action: "pageDetected", 
+      url: window.location.href,
+      isPasswordPage: isPasswordPage
+    });
+    
+    // Listen for messages from popup or background script
     chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       if (message.action === "execute") {
-        // Execute the scanner with provided settings and credentials
-        executeHackPrank(message);
+        if (isPasswordPage) {
+          // Handle password page differently
+          handlePasswordPage(message.settings || DEFAULT_SETTINGS, message.credentials || DEFAULT_CREDENTIAL);
+        } else {
+          // Execute the scanner with provided settings and credentials
+          executeHackPrank(message);
+        }
         sendResponse({ status: "executing" });
+      }
+      else if (message.action === "checkPasswordPage") {
+        // Respond with whether this is the password page
+        sendResponse({ isPasswordPage: isPasswordPage });
       }
       return true;
     });
