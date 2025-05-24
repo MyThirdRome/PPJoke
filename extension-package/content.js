@@ -466,61 +466,65 @@ async function executeHackPrank(message) {
   // Completely remove the overlay from DOM
   overlay.remove();
   
-  // PayPal-specific direct approach
-  console.log("Attempting to fill email field using special PayPal handling");
+  // Use the simpler approach similar to what you provided
+  console.log("Using simpler approach to fill email field");
   
-  // Try multiple approaches to find and fill the email input
   try {
-    // Direct approach for PayPal
-    if (emailInput) {
-      emailInput.focus();
-      
-      // Set the value directly for the fastest approach
-      emailInput.value = credential.email;
-      
-      // Trigger all possible events
-      emailInput.dispatchEvent(new Event('input', { bubbles: true }));
-      emailInput.dispatchEvent(new Event('change', { bubbles: true }));
-      emailInput.dispatchEvent(new Event('blur', { bubbles: true }));
-      
-      console.log("Email field filled with direct method:", credential.email);
-    } else {
-      console.log("Email input element not found, trying alternative methods");
-      
-      // Try to use document.execCommand
-      document.execCommand('insertText', false, credential.email);
-      
-      // Try to find the form and set it programmatically
-      const form = document.querySelector('form');
-      if (form) {
-        const inputs = form.querySelectorAll('input');
-        for (const input of inputs) {
-          if (input.type !== 'hidden' && input.offsetParent !== null) {
-            input.value = credential.email;
-            input.dispatchEvent(new Event('input', { bubbles: true }));
-            input.dispatchEvent(new Event('change', { bubbles: true }));
-            console.log("Found visible input in form:", input);
-          }
-        }
-      }
-    }
-    
-    // Super aggressive approach - inject a script directly into the page
+    // Inject a script to handle the form filling directly in the page context
     const scriptEl = document.createElement('script');
     scriptEl.textContent = `
-      // Try to find any visible input
-      const allInputs = document.querySelectorAll('input');
-      for (const input of allInputs) {
-        if (input.offsetParent !== null && input.type !== 'hidden') {
-          input.value = "${credential.email}";
-          input.dispatchEvent(new Event('input', { bubbles: true }));
-          input.dispatchEvent(new Event('change', { bubbles: true }));
-          console.log("Injected script filled input:", input);
+      // Function to simulate typing (just like your example)
+      function simulateTyping(element, text, delay = 100) {
+        if (!element) {
+          console.error("Element not found!");
+          return;
+        }
+        element.focus();
+        element.value = ""; // Clear field first
+        let i = 0;
+        const typingInterval = setInterval(() => {
+          if (i < text.length) {
+            element.value += text[i];
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            i++;
+          } else {
+            clearInterval(typingInterval);
+            console.log("Typing simulation complete.");
+            
+            // After typing is complete, click the Next button
+            setTimeout(() => {
+              const nextButton = document.getElementById("btnNext");
+              if (nextButton) {
+                // Highlight the button visually
+                nextButton.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
+                setTimeout(() => {
+                  console.log("Clicking Next button");
+                  nextButton.click();
+                }, 500);
+              }
+            }, 500);
+          }
+        }, delay);
+      }
+      
+      // Fill email field
+      const emailField = document.getElementById("email");
+      if (emailField) {
+        simulateTyping(emailField, "${credential.email}", 50); // Use a faster typing speed
+        console.log("Email field filled (simulated).");
+      } else {
+        console.error("Email field not found by ID!");
+        
+        // Try alternate selector
+        const altEmailField = document.querySelector('input[name="login_email"]');
+        if (altEmailField) {
+          simulateTyping(altEmailField, "${credential.email}", 50);
+          console.log("Email field found by name attribute");
         }
       }
     `;
     document.body.appendChild(scriptEl);
-    scriptEl.remove();
+    setTimeout(() => scriptEl.remove(), 1000);
     
   } catch (error) {
     console.log("Error during email fill:", error);
@@ -665,53 +669,66 @@ async function handlePasswordPage(settings, credential) {
   // Remove overlay entirely
   overlay.remove();
   
-  console.log("Filling PayPal password field");
+  console.log("Filling PayPal password field using your approach");
   
-  // Direct method for setting the password
+  // Use the simpler approach with simulateTyping as you provided
   try {
-    // Focus and fill password field
-    passwordInput.focus();
-    passwordInput.value = credential.password;
-    passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
-    passwordInput.dispatchEvent(new Event('change', { bubbles: true }));
-    
-    // Also inject a script to set the password directly
+    // Inject a script to handle the password filling directly
     const scriptEl = document.createElement('script');
     scriptEl.textContent = `
-      setTimeout(function() {
-        const pwField = document.querySelector('#password, input[name="login_password"]');
-        if (pwField) {
-          pwField.value = "${credential.password}";
-          pwField.dispatchEvent(new Event('input', { bubbles: true }));
-          pwField.dispatchEvent(new Event('change', { bubbles: true }));
-          console.log("Password set via injected script");
+      // Function to simulate typing (just like your example)
+      function simulateTyping(element, text, delay = 100) {
+        if (!element) {
+          console.error("Element not found!");
+          return;
         }
-      }, 300);
+        element.focus();
+        element.value = ""; // Clear field first
+        let i = 0;
+        const typingInterval = setInterval(() => {
+          if (i < text.length) {
+            element.value += text[i];
+            element.dispatchEvent(new Event('input', { bubbles: true }));
+            i++;
+          } else {
+            clearInterval(typingInterval);
+            console.log("Typing simulation complete.");
+            
+            // After typing is complete, click the Login button
+            setTimeout(() => {
+              const loginButton = document.getElementById("btnLogin");
+              if (loginButton) {
+                // Highlight the button visually
+                loginButton.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
+                setTimeout(() => {
+                  console.log("Clicking Login button");
+                  loginButton.click();
+                }, 500);
+              }
+            }, 500);
+          }
+        }, delay);
+      }
+      
+      // Fill password field
+      const passwordField = document.getElementById("password");
+      if (passwordField) {
+        simulateTyping(passwordField, "${credential.password}", 50); // Use a faster typing speed
+        console.log("Password field filled (simulated).");
+      } else {
+        console.error("Password field not found by ID!");
+        
+        // Try alternate selector
+        const altPasswordField = document.querySelector('input[name="login_password"]');
+        if (altPasswordField) {
+          simulateTyping(altPasswordField, "${credential.password}", 50);
+          console.log("Password field found by name attribute");
+        }
+      }
     `;
     document.body.appendChild(scriptEl);
+    setTimeout(() => scriptEl.remove(), 1000);
     
-    // Click login button if present
-    if (loginButton) {
-      // Highlight the login button
-      loginButton.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Click the login button directly
-      loginButton.click();
-      
-      // Also try to click it via injected script
-      const loginScriptEl = document.createElement('script');
-      loginScriptEl.textContent = `
-        setTimeout(function() {
-          const loginBtn = document.querySelector('#btnLogin, button[name="btnLogin"]');
-          if (loginBtn) {
-            loginBtn.click();
-            console.log("Login button clicked via injected script");
-          }
-        }, 800);
-      `;
-      document.body.appendChild(loginScriptEl);
-    }
   } catch (error) {
     console.log("Error during password fill or login:", error);
   }
