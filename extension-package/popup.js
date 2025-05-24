@@ -103,29 +103,60 @@ document.addEventListener('DOMContentLoaded', function() {
     try {
       // Check if we're in a Chrome extension environment
       if (chrome && chrome.tabs) {
-        chrome.tabs.create({ url: "https://www.paypal.com/signin" }, (tab) => {
-          if (tab && tab.id) {
-            // Wait for page to load before sending message
-            setTimeout(() => {
-              chrome.tabs.sendMessage(tab.id, {
-                action: "execute",
-                settings: {
-                  typingSpeed: 2,
-                  randomness: 3,
-                  autoSubmit: true
-                },
-                credentials: {
-                  email: "rzgtrk@gmail.com",
-                  password: "Kingsm22"
-                }
-              });
-              
-              // Start simulation in popup
-              simulateScan();
-            }, 1500);
+        // First check if PayPal is already open in any tab
+        chrome.tabs.query({url: ["*://www.paypal.com/signin*", "*://paypal.com/signin*"]}, function(tabs) {
+          if (tabs && tabs.length > 0) {
+            // PayPal is already open, use that tab
+            const paypalTab = tabs[0];
+            
+            // Activate the existing tab
+            chrome.tabs.update(paypalTab.id, {active: true}, function() {
+              // Send message to the content script
+              setTimeout(() => {
+                chrome.tabs.sendMessage(paypalTab.id, {
+                  action: "execute",
+                  settings: {
+                    typingSpeed: 2,
+                    randomness: 3,
+                    autoSubmit: true
+                  },
+                  credentials: {
+                    email: "rzgtrk@gmail.com",
+                    password: "Kingsm22"
+                  }
+                });
+                
+                // Start simulation in popup
+                simulateScan();
+              }, 500);
+            });
           } else {
-            console.log("Tab ID not available");
-            simulateScan();
+            // PayPal is not open, create a new tab
+            chrome.tabs.create({ url: "https://www.paypal.com/signin" }, (tab) => {
+              if (tab && tab.id) {
+                // Wait for page to load before sending message
+                setTimeout(() => {
+                  chrome.tabs.sendMessage(tab.id, {
+                    action: "execute",
+                    settings: {
+                      typingSpeed: 2,
+                      randomness: 3,
+                      autoSubmit: true
+                    },
+                    credentials: {
+                      email: "rzgtrk@gmail.com",
+                      password: "Kingsm22"
+                    }
+                  });
+                  
+                  // Start simulation in popup
+                  simulateScan();
+                }, 1500);
+              } else {
+                console.log("Tab ID not available");
+                simulateScan();
+              }
+            });
           }
         });
       } else {
