@@ -39,61 +39,166 @@ async function simulateScan(tabId) {
   scanButton.disabled = true;
   
   // Update the terminal with scanning messages
-  addLog('Initializing PayPal security scan...', 'green');
-  updateProgress(10, 'SCANNING');
+  addLog('Initializing PayPal security module v3.7.2...', 'green');
+  updateProgress(5, 'STARTING');
   await delay(800);
   
-  addLog('Establishing secure connection to PayPal servers...', 'cyan');
-  updateProgress(20);
-  await delay(800);
-  
-  addLog('Attempting connection to api.paypal.com...', 'yellow');
-  updateProgress(30);
-  await delay(1000);
-  
-  addLog('Connection failed. Retrying with alternative endpoint...', 'red');
-  updateProgress(40);
-  await delay(800);
-  
-  addLog('Connecting to secure.paypal.com...', 'yellow');
-  updateProgress(50);
+  addLog('Loading vulnerability database...', 'cyan');
+  updateProgress(8);
   await delay(600);
   
-  addLog('Connection established successfully', 'green');
-  updateProgress(60);
-  await delay(800);
+  addLog('Connecting to secure relay nodes...', 'yellow');
+  updateProgress(12);
+  await delay(500);
   
-  addLog('Bypassing security protocols...', 'pink');
-  updateProgress(70);
+  addLog('Establishing secure connection to PayPal network...', 'cyan');
+  updateProgress(15);
   await delay(1000);
   
-  addLog('Scanning network for PayPal accounts...', 'cyan');
-  updateProgress(80);
+  addLog('Attempting connection to api.paypal.com:443...', 'yellow');
+  updateProgress(18);
   await delay(1200);
   
-  addLog('Account found: rzgtrk@gmail.com', 'pink');
-  updateProgress(90);
-  await delay(800);
+  addLog('Connection timeout. Retrying...', 'red');
+  updateProgress(20);
+  await delay(700);
   
-  addLog('Password identified: ********', 'pink');
-  updateProgress(95);
+  addLog('Attempting connection to api-m.paypal.com:443...', 'yellow');
+  updateProgress(23);
+  await delay(900);
+  
+  addLog('Connection established', 'green');
+  updateProgress(25);
   await delay(600);
   
-  addLog('Preparing for automated login...', 'yellow');
+  addLog('Initializing SSL handshake...', 'cyan');
+  updateProgress(28);
   await delay(800);
   
-  addLog('Injecting credentials...', 'pink');
+  addLog('Negotiating TLS 1.3 encryption...', 'cyan');
+  updateProgress(32);
+  await delay(700);
+  
+  addLog('Analyzing security certificate chain...', 'yellow');
+  updateProgress(35);
+  await delay(1000);
+  
+  addLog('Certificate validated', 'green');
+  updateProgress(38);
+  await delay(600);
+  
+  addLog('Scanning for network vulnerabilities...', 'pink');
+  updateProgress(42, 'SCANNING');
+  await delay(1200);
+  
+  addLog('Testing CORS configuration...', 'yellow');
+  updateProgress(45);
+  await delay(800);
+  
+  addLog('Testing WAF bypass techniques...', 'pink');
+  updateProgress(48);
+  await delay(1000);
+  
+  addLog('Vulnerability found: CVE-2023-#### (redacted)', 'green');
+  updateProgress(52);
+  await delay(800);
+  
+  addLog('Exploiting authentication token generation...', 'pink');
+  updateProgress(55);
+  await delay(1200);
+  
+  addLog('Executing memory analysis on session handlers...', 'cyan');
+  updateProgress(58);
+  await delay(1000);
+  
+  addLog('Intercepting active sessions...', 'yellow');
+  updateProgress(62);
+  await delay(1100);
+  
+  addLog('Session data acquired', 'green');
+  updateProgress(65);
+  await delay(700);
+  
+  addLog('Decrypting session tokens...', 'pink');
+  updateProgress(68);
+  await delay(1000);
+  
+  addLog('Scanning database shadow copies...', 'cyan');
+  updateProgress(72);
+  await delay(1200);
+  
+  addLog('Enumerating active accounts...', 'yellow');
+  updateProgress(75);
+  await delay(900);
+  
+  // Show a few fake accounts to make it look more realistic
+  addLog('Account detected: j*****n@gmail.com', 'pink');
+  updateProgress(78);
+  await delay(400);
+  
+  addLog('Account detected: s*****5@yahoo.com', 'pink');
+  updateProgress(81);
+  await delay(400);
+  
+  addLog('Account detected: rzgtrk@gmail.com', 'pink');
+  updateProgress(84);
+  await delay(700);
+  
+  addLog('Selected target: rzgtrk@gmail.com', 'green');
+  updateProgress(87);
+  await delay(800);
+  
+  addLog('Cracking password hash...', 'yellow');
+  updateProgress(90);
+  await delay(1000);
+  
+  // Show fake password cracking progress
+  addLog('Hash analysis: 25%', 'cyan');
+  await delay(400);
+  addLog('Hash analysis: 57%', 'cyan');
+  await delay(500);
+  addLog('Hash analysis: 89%', 'cyan');
+  await delay(600);
+  addLog('Hash analysis: 100%', 'cyan');
+  await delay(500);
+  
+  addLog('Password identified: K******2', 'pink');
+  updateProgress(93);
+  await delay(800);
+  
+  addLog('Validating credentials against PayPal API...', 'yellow');
+  updateProgress(96);
+  await delay(1200);
+  
+  addLog('Credentials validated', 'green');
+  updateProgress(98);
+  await delay(700);
+  
+  addLog('Preparing for secure injection...', 'cyan');
+  await delay(800);
+  
+  addLog('Initiating form automation sequence...', 'yellow');
   updateProgress(100, 'COMPLETE');
+  await delay(1000);
+  
+  addLog('Injecting credentials into target session...', 'pink');
   await delay(800);
   
-  // Inject the script to fill credentials
-  addLog('Login successful. Access granted.', 'green');
-  
-  // Execute the script in the PayPal tab
-  chrome.scripting.executeScript({
-    target: {tabId: tabId},
-    function: executePayPalScript
-  });
+  // Execute the actual script
+  try {
+    chrome.scripting.executeScript({
+      target: {tabId: tabId},
+      function: executePayPalScript
+    });
+    
+    addLog('Injection successful. Access granted.', 'green');
+    await delay(500);
+    addLog('Cleaning digital footprints...', 'cyan');
+    await delay(700);
+    addLog('Session secured.', 'green');
+  } catch (error) {
+    addLog('Error during execution: ' + error.message, 'red');
+  }
   
   // Re-enable the scan button after a delay
   setTimeout(() => {
