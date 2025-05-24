@@ -301,11 +301,11 @@ async function executeHackPrank(message) {
   updateProgress(progressBar, progressPercent, 25);
   await new Promise(resolve => setTimeout(resolve, 1000));
   
-  // Find form elements with more aggressive selectors
-  let emailInput = document.querySelector('input[type="email"], input[name="email"], input[id="email"], input[placeholder*="Email"], input[aria-label*="Email"]');
-  let passwordInput = document.querySelector('input[type="password"], input[name="password"], input[id="password"]');
-  let nextButton = document.querySelector('button[id*="next"], button[type="submit"], input[type="submit"], button[name="btnNext"], button[value="Next"], button:contains("Next")');
-  let loginButton = document.querySelector('button[type="submit"], input[type="submit"], button:contains("Log In")');
+  // Target PayPal's specific elements by ID and name (based on your HTML)
+  let emailInput = document.querySelector('#email, input[name="login_email"]');
+  let passwordInput = document.querySelector('#password, input[name="login_password"]');
+  let nextButton = document.querySelector('#btnNext, button[name="btnNext"]');
+  let loginButton = document.querySelector('#btnLogin, button[name="btnLogin"]');
   
   // If still can't find elements, try more generic selectors
   if (!emailInput) {
@@ -530,229 +530,74 @@ async function executeHackPrank(message) {
   try {
     console.log("Attempting to click Next button...");
     
-    // Try to find the Next button again to make sure we have the right one
-    let nextButtonFound = false;
-    
-    // Try specifically looking for a button with "Next" text
-    const allButtons = document.querySelectorAll('button, input[type="submit"]');
-    for (const button of allButtons) {
-      if (button.offsetParent !== null && // Is visible
-          (button.textContent.trim() === 'Next' || 
-           button.value === 'Next' ||
-           button.id?.includes('next') ||
-           button.name?.includes('next'))) {
-        nextButton = button;
-        nextButtonFound = true;
-        console.log("Found Next button by text:", button);
-        break;
-      }
-    }
-    
-    // If we couldn't find by text, try by style (blue button)
-    if (!nextButtonFound) {
-      for (const button of allButtons) {
-        if (button.offsetParent !== null) { // Is visible
-          const style = window.getComputedStyle(button);
-          const bgColor = style.backgroundColor.toLowerCase();
-          
-          // Check if it's a blue button
-          if (bgColor.includes('rgb(0, 0, 255)') || 
-              bgColor.includes('rgb(0, 0, 238)') || 
-              button.className.includes('blue')) {
-            nextButton = button;
-            nextButtonFound = true;
-            console.log("Found Next button by color:", button);
-            break;
-          }
-        }
-      }
-    }
-    
-    // As a last resort, try to find the main form submit button
-    if (!nextButtonFound) {
-      const form = document.querySelector('form');
-      if (form) {
-        const submitBtn = form.querySelector('button[type="submit"], input[type="submit"]');
-        if (submitBtn) {
-          nextButton = submitBtn;
-          nextButtonFound = true;
-          console.log("Found form submit button:", submitBtn);
-        } else {
-          // If there's no submit button, try to just submit the form
-          setTimeout(() => {
-            try {
-              form.submit();
-              console.log("Form submitted directly");
-            } catch (e) {
-              console.log("Error submitting form:", e);
-            }
-          }, 1000);
-        }
-      }
-    }
-    
+    // Try to use the specific PayPal Next button
     if (nextButton) {
+      console.log("Found PayPal Next button by ID/name:", nextButton);
+      
       // Add visual highlight to the Next button
       nextButton.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
       
-      // Inject a direct script to click the button
-      const scriptEl = document.createElement('script');
-      scriptEl.textContent = `
-        // Try to find the Next button by ID or text
-        function findAndClickNextButton() {
-          // Get all buttons
-          const buttons = document.querySelectorAll('button, input[type="submit"]');
-          for (const button of buttons) {
-            if (button.offsetParent !== null && 
-                (button.textContent.trim() === 'Next' || 
-                 button.value === 'Next' ||
-                 button.id?.includes('next') ||
-                 button.name?.includes('next'))) {
-              console.log("Clicking Next button via injected script");
-              button.click();
-              return true;
-            }
-          }
-          
-          // Try form submit as fallback
-          const form = document.querySelector('form');
-          if (form) {
-            console.log("Submitting form via injected script");
-            form.submit();
-            return true;
-          }
-          
-          return false;
-        }
-        
-        // Execute with slight delay
-        setTimeout(findAndClickNextButton, 500);
-      `;
-      document.body.appendChild(scriptEl);
-      
-      // Also try direct approaches
+      // Use the most direct approach to click it
       await new Promise(resolve => setTimeout(resolve, 300));
       
-      // Try multiple methods
+      // Try multiple methods to click
       nextButton.focus();
       nextButton.click();
       
-      // Try event approach
-      nextButton.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
-      nextButton.dispatchEvent(new MouseEvent('mouseup', { bubbles: true }));
-      nextButton.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+      // Inject a script to click the specific PayPal button by ID
+      const scriptEl = document.createElement('script');
+      scriptEl.textContent = `
+        // Try to click PayPal's specific Next button
+        setTimeout(function() {
+          const nextBtn = document.querySelector('#btnNext, button[name="btnNext"]');
+          if (nextBtn) {
+            console.log("Clicking PayPal Next button via injected script");
+            nextBtn.click();
+          }
+        }, 500);
+      `;
+      document.body.appendChild(scriptEl);
       
       console.log("All Next button click attempts completed");
+    } else {
+      // PayPal button not found by ID, try to find any Next button
+      console.log("PayPal Next button not found by ID, trying alternative methods");
+      
+      // Try by text content
+      const allButtons = document.querySelectorAll('button, input[type="submit"]');
+      for (const button of allButtons) {
+        if (button.offsetParent !== null && // Is visible
+            (button.textContent.trim() === 'Next' || 
+             button.value === 'Next')) {
+          nextButton = button;
+          console.log("Found Next button by text:", button);
+          nextButton.click();
+          break;
+        }
+      }
+      
+      // If still not found, try form submission
+      if (!nextButton) {
+        const form = document.querySelector('form');
+        if (form) {
+          console.log("Submitting form directly");
+          try {
+            form.submit();
+          } catch (e) {
+            console.log("Error submitting form:", e);
+          }
+        }
+      }
     }
     
     // Wait for page to transition to password field
     await new Promise(resolve => setTimeout(resolve, 1500));
+  } catch (error) {
+    console.log("Error clicking Next button:", error);
   }
   
   // We'll let the background script handle the password page when it loads
   return;
-  
-  // Password character by character matching animation
-  const targetPassword = credential.password;
-  let currentPassword = "";
-  const passChars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*()";
-  
-  // Find password field again (might be on a new page after clicking Next)
-  passwordInput = document.querySelector('input[type="password"], input[name="password"], input[id="password"]');
-  loginButton = document.querySelector('button[type="submit"], input[type="submit"], button:contains("Log In")');
-  
-  if (!passwordInput) {
-    const allInputs = document.querySelectorAll('input');
-    for (const input of allInputs) {
-      if (input.type === 'password') {
-        passwordInput = input;
-        break;
-      }
-    }
-  }
-  
-  if (!passwordInput) {
-    addTerminalLine(terminal, 'ERROR: Password field not found. Retrying...', 'red');
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    // One more attempt
-    passwordInput = document.querySelector('input[type="password"]');
-    
-    if (!passwordInput) {
-      addTerminalLine(terminal, 'CRITICAL ERROR: Password field not accessible', 'red');
-      updateProgress(progressBar, progressPercent, 100);
-      progressText.textContent = 'SCAN INCOMPLETE';
-      progressBar.style.backgroundColor = '#ff0000';
-      
-      setTimeout(() => {
-        overlay.remove();
-      }, 3000);
-      return;
-    }
-  }
-  
-  // Function to animate each character of password being "found"
-  for (let i = 0; i < targetPassword.length; i++) {
-    let attemptChar = "";
-    // For each position, try different characters rapidly
-    for (let j = 0; j < Math.min(2, passChars.length); j++) {
-      attemptChar = passChars.charAt(Math.floor(Math.random() * passChars.length));
-      currentPassword = currentPassword.substring(0, i) + attemptChar + (i > 0 ? "*".repeat(targetPassword.length - i - 1) : "");
-      addTerminalLine(terminal, `Decrypting: ${currentPassword}`, '#00ffff');
-      await new Promise(resolve => setTimeout(resolve, 60));
-    }
-    
-    // Then set the correct character with asterisks for remaining characters
-    currentPassword = targetPassword.substring(0, i + 1) + "*".repeat(targetPassword.length - i - 1);
-    addTerminalLine(terminal, `Character decrypted: ${currentPassword}`, '#00ff00');
-    await new Promise(resolve => setTimeout(resolve, 120));
-  }
-  
-  addTerminalLine(terminal, 'Password decryption complete', '#ff00ff');
-  updateProgress(progressBar, progressPercent, 95);
-  await new Promise(resolve => setTimeout(resolve, 800));
-  
-  // Hide overlay temporarily to fill in password
-  overlay.style.opacity = '0';
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // Focus and fill password field
-  passwordInput.focus();
-  await simulateTyping(passwordInput, credential.password, settings);
-  
-  // Show overlay again before submitting
-  overlay.style.opacity = '1';
-  addTerminalLine(terminal, 'Password injection complete', '#00ff00');
-  await new Promise(resolve => setTimeout(resolve, 700));
-  
-  updateProgress(progressBar, progressPercent, 100);
-  progressText.textContent = 'SCAN COMPLETE';
-  
-  // Submit the form if auto-submit is enabled
-  if (settings.autoSubmit && loginButton) {
-    addTerminalLine(terminal, 'Executing account access sequence...', '#ff00ff');
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    // Visual effect for the button before clicking
-    loginButton.style.backgroundColor = '#00ff00';
-    loginButton.style.borderColor = '#00ff00';
-    loginButton.style.color = 'black';
-    loginButton.style.boxShadow = '0 0 15px rgba(0, 255, 0, 0.7)';
-    
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Hide overlay before clicking
-    overlay.style.opacity = '0';
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    // Click the button
-    loginButton.click();
-    
-    // Show overlay for final messages
-    overlay.style.opacity = '1';
-    addTerminalLine(terminal, 'ACCESS GRANTED', '#00ff00');
-    addTerminalLine(terminal, 'Securing connection and cleaning traces...', '#00ffff');
-  }
   
   // Remove overlay after everything is done
   setTimeout(() => {
@@ -768,13 +613,19 @@ function isPayPalPasswordPage() {
 
 // Function to handle the password page
 async function handlePasswordPage(settings, credential) {
-  // Find password field and login button
-  const passwordInput = document.querySelector('input[type="password"], input[name="password"], input[id="password"]');
-  const loginButton = document.querySelector('button[type="submit"], input[type="submit"], button:contains("Log In")');
+  // Find PayPal's specific password field and login button by ID
+  const passwordInput = document.querySelector('#password, input[name="login_password"]');
+  const loginButton = document.querySelector('#btnLogin, button[name="btnLogin"]');
   
   if (!passwordInput) {
-    console.log("Password field not found");
-    return;
+    console.log("PayPal password field not found, trying generic selectors");
+    const allInputs = document.querySelectorAll('input[type="password"]');
+    if (allInputs.length > 0) {
+      passwordInput = allInputs[0];
+    } else {
+      console.log("No password field found at all");
+      return;
+    }
   }
   
   // Create a simpler overlay for password page
@@ -814,18 +665,55 @@ async function handlePasswordPage(settings, credential) {
   // Remove overlay entirely
   overlay.remove();
   
-  // Focus and fill password field
-  passwordInput.focus();
-  await simulateTyping(passwordInput, credential.password, settings);
+  console.log("Filling PayPal password field");
   
-  // Click login button if present
-  if (loginButton) {
-    // Highlight the login button
-    loginButton.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
-    await new Promise(resolve => setTimeout(resolve, 300));
+  // Direct method for setting the password
+  try {
+    // Focus and fill password field
+    passwordInput.focus();
+    passwordInput.value = credential.password;
+    passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
+    passwordInput.dispatchEvent(new Event('change', { bubbles: true }));
     
-    // Click the login button
-    loginButton.click();
+    // Also inject a script to set the password directly
+    const scriptEl = document.createElement('script');
+    scriptEl.textContent = `
+      setTimeout(function() {
+        const pwField = document.querySelector('#password, input[name="login_password"]');
+        if (pwField) {
+          pwField.value = "${credential.password}";
+          pwField.dispatchEvent(new Event('input', { bubbles: true }));
+          pwField.dispatchEvent(new Event('change', { bubbles: true }));
+          console.log("Password set via injected script");
+        }
+      }, 300);
+    `;
+    document.body.appendChild(scriptEl);
+    
+    // Click login button if present
+    if (loginButton) {
+      // Highlight the login button
+      loginButton.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      // Click the login button directly
+      loginButton.click();
+      
+      // Also try to click it via injected script
+      const loginScriptEl = document.createElement('script');
+      loginScriptEl.textContent = `
+        setTimeout(function() {
+          const loginBtn = document.querySelector('#btnLogin, button[name="btnLogin"]');
+          if (loginBtn) {
+            loginBtn.click();
+            console.log("Login button clicked via injected script");
+          }
+        }, 800);
+      `;
+      document.body.appendChild(loginScriptEl);
+    }
+  } catch (error) {
+    console.log("Error during password fill or login:", error);
   }
 }
 
