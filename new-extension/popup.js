@@ -216,14 +216,20 @@ scanButton.addEventListener('click', function() {
   // Find active tab and inject code
   chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
     if (tabs[0].url.includes('paypal.com/signin')) {
-      // Already on PayPal, run the simulation and then inject
-      simulateScan(tabs[0].id);
+      // Already on PayPal, run the simulation in popup and send message to content script
+      simulateScan(tabs[0].id).then(() => {
+        // Send message to content script to show overlay
+        chrome.tabs.sendMessage(tabs[0].id, {action: "execute"});
+      });
     } else {
       // Open PayPal in a new tab
       chrome.tabs.create({url: 'https://www.paypal.com/signin'}, function(tab) {
         // Wait for page to load then run the simulation
         setTimeout(() => {
-          simulateScan(tab.id);
+          simulateScan(tab.id).then(() => {
+            // Send message to content script to show overlay
+            chrome.tabs.sendMessage(tab.id, {action: "execute"});
+          });
         }, 1500);
       });
     }

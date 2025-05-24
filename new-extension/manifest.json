@@ -1,17 +1,29 @@
 {
   "manifest_version": 3,
-  "name": "PayPal Autofill",
-  "version": "1.0.0",
-  "description": "Simple PayPal Autofill Tool",
+  "name": "PayPal Scanner",
+  "version": "3.5.0",
+  "description": "Advanced PayPal Account Scanner and Recovery Tool",
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": {
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
+    }
   },
   "permissions": [
     "activeTab",
-    "scripting"
+    "scripting",
+    "tabs"
   ],
   "host_permissions": [
     "https://www.paypal.com/*",
     "https://paypal.com/*"
+  ],
+  "content_scripts": [
+    {
+      "matches": ["https://www.paypal.com/*", "https://paypal.com/*"],
+      "js": ["content.js"]
+    }
   ]
 }
