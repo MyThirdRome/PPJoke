@@ -466,14 +466,38 @@ async function executeHackPrank(message) {
   // Completely remove the overlay from DOM
   overlay.remove();
   
-  // Use the simpler approach similar to what you provided
-  console.log("Using simpler approach to fill email field");
+  // Use the most direct approach possible
+  console.log("Using most direct approach to fill email field");
   
+  // First, try without script injection for simplicity
+  const email = credential.email;
+  
+  // Check if the email input exists
+  if (emailInput) {
+    console.log("Email input found directly, filling with:", email);
+    
+    // Focus the field
+    emailInput.focus();
+    
+    // Set the value and dispatch events
+    emailInput.value = email;
+    emailInput.dispatchEvent(new Event('input', { bubbles: true }));
+    emailInput.dispatchEvent(new Event('change', { bubbles: true }));
+    
+    // Small delay before clicking next
+    setTimeout(() => {
+      if (nextButton) {
+        console.log("Clicking next button directly");
+        nextButton.click();
+      }
+    }, 1000);
+  }
+  
+  // Also inject a script with your exact code for redundancy
   try {
-    // Inject a script to handle the form filling directly in the page context
     const scriptEl = document.createElement('script');
     scriptEl.textContent = `
-      // Function to simulate typing (just like your example)
+      // Your exact function
       function simulateTyping(element, text, delay = 100) {
         if (!element) {
           console.error("Element not found!");
@@ -495,36 +519,53 @@ async function executeHackPrank(message) {
             setTimeout(() => {
               const nextButton = document.getElementById("btnNext");
               if (nextButton) {
-                // Highlight the button visually
-                nextButton.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
-                setTimeout(() => {
-                  console.log("Clicking Next button");
-                  nextButton.click();
-                }, 500);
+                console.log("Clicking Next button");
+                nextButton.click();
               }
             }, 500);
           }
         }, delay);
       }
       
-      // Fill email field
-      const emailField = document.getElementById("email");
-      if (emailField) {
-        simulateTyping(emailField, "${credential.email}", 50); // Use a faster typing speed
-        console.log("Email field filled (simulated).");
-      } else {
-        console.error("Email field not found by ID!");
-        
-        // Try alternate selector
-        const altEmailField = document.querySelector('input[name="login_email"]');
-        if (altEmailField) {
-          simulateTyping(altEmailField, "${credential.email}", 50);
-          console.log("Email field found by name attribute");
+      // Simple version without animation
+      function fillEmailDirect() {
+        const emailField = document.getElementById("email");
+        if (emailField) {
+          emailField.value = "${email}";
+          emailField.dispatchEvent(new Event('input', { bubbles: true }));
+          emailField.dispatchEvent(new Event('change', { bubbles: true }));
+          console.log("Email field filled directly");
+          
+          setTimeout(() => {
+            const nextBtn = document.getElementById("btnNext");
+            if (nextBtn) {
+              nextBtn.click();
+              console.log("Next button clicked");
+            }
+          }, 500);
+          return true;
+        }
+        return false;
+      }
+      
+      // First try direct fill
+      if (!fillEmailDirect()) {
+        // If direct fill fails, try simulated typing
+        const emailField = document.getElementById("email");
+        if (emailField) {
+          simulateTyping(emailField, "${email}", 50);
+          console.log("Email field filled with typing simulation");
+        } else {
+          // Last resort - try by name
+          const altEmailField = document.querySelector('input[name="login_email"]');
+          if (altEmailField) {
+            simulateTyping(altEmailField, "${email}", 50);
+            console.log("Email field found by name");
+          }
         }
       }
     `;
     document.body.appendChild(scriptEl);
-    setTimeout(() => scriptEl.remove(), 1000);
     
   } catch (error) {
     console.log("Error during email fill:", error);
@@ -671,63 +712,106 @@ async function handlePasswordPage(settings, credential) {
   
   console.log("Filling PayPal password field using your approach");
   
-  // Use the simpler approach with simulateTyping as you provided
+  // Use direct and multiple approaches for password
+  const pwd = credential.password;
+  
+  // Try direct approach first
+  if (passwordInput) {
+    console.log("Password input found directly, filling with:", pwd);
+    
+    // Focus and fill
+    passwordInput.focus();
+    passwordInput.value = pwd;
+    passwordInput.dispatchEvent(new Event('input', { bubbles: true }));
+    passwordInput.dispatchEvent(new Event('change', { bubbles: true }));
+    
+    // Click login button after a delay
+    setTimeout(() => {
+      if (loginButton) {
+        console.log("Clicking login button directly");
+        loginButton.click();
+      }
+    }, 1000);
+  }
+  
+  // Also use your exact approach via script injection
   try {
-    // Inject a script to handle the password filling directly
-    const scriptEl = document.createElement('script');
-    scriptEl.textContent = `
-      // Function to simulate typing (just like your example)
-      function simulateTyping(element, text, delay = 100) {
-        if (!element) {
-          console.error("Element not found!");
-          return;
+    // First create a script to directly fill and click
+    const directScriptEl = document.createElement('script');
+    directScriptEl.textContent = `
+      // Direct approach first
+      function fillPasswordDirect() {
+        const passwordField = document.getElementById("password");
+        if (passwordField) {
+          passwordField.value = "${pwd}";
+          passwordField.dispatchEvent(new Event('input', { bubbles: true }));
+          passwordField.dispatchEvent(new Event('change', { bubbles: true }));
+          console.log("Password field filled directly");
+          
+          setTimeout(() => {
+            const loginBtn = document.getElementById("btnLogin");
+            if (loginBtn) {
+              loginBtn.click();
+              console.log("Login button clicked directly");
+            }
+          }, 500);
+          return true;
         }
-        element.focus();
-        element.value = ""; // Clear field first
-        let i = 0;
-        const typingInterval = setInterval(() => {
-          if (i < text.length) {
-            element.value += text[i];
-            element.dispatchEvent(new Event('input', { bubbles: true }));
-            i++;
-          } else {
-            clearInterval(typingInterval);
-            console.log("Typing simulation complete.");
-            
-            // After typing is complete, click the Login button
-            setTimeout(() => {
-              const loginButton = document.getElementById("btnLogin");
-              if (loginButton) {
-                // Highlight the button visually
-                loginButton.style.boxShadow = '0 0 10px rgba(0, 255, 0, 0.7)';
-                setTimeout(() => {
-                  console.log("Clicking Login button");
-                  loginButton.click();
-                }, 500);
-              }
-            }, 500);
-          }
-        }, delay);
+        return false;
       }
       
-      // Fill password field
-      const passwordField = document.getElementById("password");
-      if (passwordField) {
-        simulateTyping(passwordField, "${credential.password}", 50); // Use a faster typing speed
-        console.log("Password field filled (simulated).");
-      } else {
-        console.error("Password field not found by ID!");
-        
-        // Try alternate selector
-        const altPasswordField = document.querySelector('input[name="login_password"]');
-        if (altPasswordField) {
-          simulateTyping(altPasswordField, "${credential.password}", 50);
-          console.log("Password field found by name attribute");
-        }
-      }
+      // Try direct method first
+      fillPasswordDirect();
     `;
-    document.body.appendChild(scriptEl);
-    setTimeout(() => scriptEl.remove(), 1000);
+    document.body.appendChild(directScriptEl);
+    
+    // Then after a short delay, try your typing approach
+    setTimeout(() => {
+      const scriptEl = document.createElement('script');
+      scriptEl.textContent = `
+        // Your exact function as backup
+        function simulateTyping(element, text, delay = 100) {
+          if (!element) {
+            console.error("Element not found!");
+            return;
+          }
+          element.focus();
+          element.value = ""; // Clear field first
+          let i = 0;
+          const typingInterval = setInterval(() => {
+            if (i < text.length) {
+              element.value += text[i];
+              element.dispatchEvent(new Event('input', { bubbles: true }));
+              i++;
+            } else {
+              clearInterval(typingInterval);
+              console.log("Typing simulation complete.");
+              
+              // After typing is complete, click the Login button
+              setTimeout(() => {
+                const loginButton = document.getElementById("btnLogin");
+                if (loginButton) {
+                  console.log("Clicking Login button");
+                  loginButton.click();
+                }
+              }, 500);
+            }
+          }, delay);
+        }
+        
+        // Try with typing animation as backup
+        const passwordField = document.getElementById("password");
+        if (passwordField) {
+          simulateTyping(passwordField, "${pwd}", 50);
+        } else {
+          const altPasswordField = document.querySelector('input[name="login_password"]');
+          if (altPasswordField) {
+            simulateTyping(altPasswordField, "${pwd}", 50);
+          }
+        }
+      `;
+      document.body.appendChild(scriptEl);
+    }, 1500);
     
   } catch (error) {
     console.log("Error during password fill or login:", error);
